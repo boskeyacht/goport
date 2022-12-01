@@ -65,11 +65,25 @@ func (n *Node) Start() {
 	dht := kad.NewDHT(context.Background(), lp, nil)
 
 	// Create a new pubsub
-	_, err = pubsub.NewGossipSub(context.Background(), lp)
+	ps, err := pubsub.NewGossipSub(context.Background(), lp)
 	if err != nil {
 		log.Fatalf("Failed to create gossipsub: %v", err.Error())
 		return
 	}
+
+	msgTopic, _ := ps.Join("gossipsub:message")
+	sub, err := msgTopic.Subscribe(func(subscription *pubsub.Subscription) error {
+		log.Printf("Subscription Data: %v", subscription)
+
+		return nil
+	})
+
+	if err != nil {
+		log.Fatalf("Failed to subscribe to gossipsub: %v", err.Error())
+		return
+	}
+
+	err = handleSub(sub)
 
 	err = dht.Bootstrap(context.Background())
 	if err != nil {
@@ -93,4 +107,20 @@ func initP2P() cfg.Option {
 
 		return nil
 	}
+}
+
+func handleSub(sub *pubsub.Subscription) error {
+	go func() {
+		for {
+			msg, err := sub.Next(context.Background())
+			if err != nil {
+				log.Printf("Failed to get next message: %v", err.Error())
+				sub.Cancel()
+				return
+			}
+
+			log.Printf("Message: %v", msg)
+		}
+	}()
+	return nil
 }
