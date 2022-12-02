@@ -6,6 +6,7 @@ import (
 	"goport/config"
 	ms "goport/db"
 	"log"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -41,15 +42,16 @@ func New() (*SeaportListener, error) {
 	}, nil
 }
 
-func (sl *SeaportListener) Start(db *ms.SQLWrapper, lp *host.Host) {
-	sl.watchCounterIncremented(db)
-	sl.watchOrderCancelled(db)
-	sl.watchOrderValidated(db)
-	sl.watchOrderFulfilled(db)
+func (sl *SeaportListener) Start(wg *sync.WaitGroup, db *ms.SQLWrapper, lp *host.Host) {
+	sl.watchCounterIncremented(wg, db)
+	sl.watchOrderCancelled(wg, db)
+	sl.watchOrderValidated(wg, db)
+	sl.watchOrderFulfilled(wg, db)
 }
 
-// Use context and mutex
-func (sl *SeaportListener) watchCounterIncremented(db *ms.SQLWrapper) {
+// Watches the Seaport contract for a counter incremented event and writes it to the database
+func (sl *SeaportListener) watchCounterIncremented(wg *sync.WaitGroup, db *ms.SQLWrapper) {
+	wg.Add(1)
 	go func() {
 		sub, err := sl.Seaport.WatchCounterIncremented(&bind.WatchOpts{Context: context.Background()}, sl.WatchCountInc, []common.Address{})
 		if err != nil {
@@ -57,27 +59,34 @@ func (sl *SeaportListener) watchCounterIncremented(db *ms.SQLWrapper) {
 			return
 		}
 
-	countEventLoop:
 		for {
 			if err := <-sub.Err(); err != nil {
 				log.Printf("Failed to watch CounterIncremented: %v", err.Error())
-				break countEventLoop
+				break
 			}
 
 			e := <-sl.WatchCountInc
+
+			db.Lock()
+			defer db.Unlock()
+
 			err = db.WriteCounterIncremented(e)
 			if err != nil {
 				log.Printf("Failed to write CounterIncremented: %v", err.Error())
-				return
+				break
 			}
 
 			log.Printf("CounterIncremented: %v", e)
 		}
 
+		wg.Done()
 	}()
+
 }
 
-func (sl *SeaportListener) watchOrderCancelled(db *ms.SQLWrapper) {
+// Watches the Seaport contract for a order cancelled event and writes it to the database
+func (sl *SeaportListener) watchOrderCancelled(wg *sync.WaitGroup, db *ms.SQLWrapper) {
+	wg.Add(1)
 	go func() {
 		sub, err := sl.Seaport.WatchOrderCancelled(&bind.WatchOpts{Context: context.Background()}, sl.WatchOrderCancelled, []common.Address{}, []common.Address{})
 		if err != nil {
@@ -85,26 +94,33 @@ func (sl *SeaportListener) watchOrderCancelled(db *ms.SQLWrapper) {
 			return
 		}
 
-	cancelledEventLoop:
 		for {
 			if err := <-sub.Err(); err != nil {
 				log.Printf("Failed to watch OrderCancelled: %v", err.Error())
-				break cancelledEventLoop
+				break
 			}
 
 			e := <-sl.WatchOrderCancelled
+
+			db.Lock()
+			defer db.Unlock()
+
 			err := db.WriteOrderCancelled(e)
 			if err != nil {
 				log.Printf("Failed to write OrderCancelled: %v", err.Error())
-				return
+				break
 			}
 
 			log.Printf("OrderCancelled: %v", e)
 		}
+
+		wg.Done()
 	}()
 }
 
-func (sl *SeaportListener) watchOrderValidated(db *ms.SQLWrapper) {
+// Watches the Seaport contract for a order validated event and writes it to the database
+func (sl *SeaportListener) watchOrderValidated(wg *sync.WaitGroup, db *ms.SQLWrapper) {
+	wg.Add(1)
 	go func() {
 		sub, err := sl.Seaport.WatchOrderValidated(&bind.WatchOpts{Context: context.Background()}, sl.WatchOrderValidated, []common.Address{}, []common.Address{})
 		if err != nil {
@@ -112,26 +128,34 @@ func (sl *SeaportListener) watchOrderValidated(db *ms.SQLWrapper) {
 			return
 		}
 
-	validatedEventLoop:
 		for {
 			if err := <-sub.Err(); err != nil {
 				log.Printf("Failed to watch OrderValidated: %v", err.Error())
-				break validatedEventLoop
+				break
 			}
 
 			e := <-sl.WatchOrderValidated
+
+			db.Lock()
+			defer db.Unlock()
+
 			err := db.WriteOrderValidated(e)
 			if err != nil {
 				log.Printf("Failed to write OrderValidated: %v", err.Error())
-				return
+				break
 			}
 
 			log.Printf("OrderValidated: %v", e)
 		}
+
+		wg.Done()
 	}()
 }
 
-func (sl *SeaportListener) watchOrderFulfilled(db *ms.SQLWrapper) {
+// Watches the Seaport contract for a order fulfilled event and writes it to the database
+func (sl *SeaportListener) watchOrderFulfilled(wg *sync.WaitGroup, db *ms.SQLWrapper) {
+	wg.Add(1)
+
 	go func() {
 		sub, err := sl.Seaport.WatchOrderFulfilled(&bind.WatchOpts{Context: context.Background()}, sl.WatchOrderFulfilled, []common.Address{}, []common.Address{})
 		if err != nil {
@@ -139,21 +163,27 @@ func (sl *SeaportListener) watchOrderFulfilled(db *ms.SQLWrapper) {
 			return
 		}
 
-	fulfilledEventLoop:
 		for {
 			if err := <-sub.Err(); err != nil {
 				log.Printf("Failed to watch OrderFulfilled: %v", err.Error())
-				break fulfilledEventLoop
+				break
 			}
 
 			e := <-sl.WatchOrderFulfilled
+
+			db.Lock()
+			defer db.Unlock()
+
 			err := db.WriteOrderFulfilled(e)
 			if err != nil {
 				log.Printf("Failed to write OrderFulfilled: %v", err.Error())
-				return
+				break
 			}
 
 			log.Printf("OrderFulfilled: %v", e)
+
 		}
+
+		wg.Done()
 	}()
 }

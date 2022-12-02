@@ -8,11 +8,10 @@ import (
 )
 
 var (
-	RPC_URL     string
-	DB_NAME     string
-	DB_PASSWORD string
-	HOST_PORT   string
-	HOST_NAME   string
+	RPC_URL   string
+	DB_NAME   string
+	HOST_PORT string
+	HOST_NAME string
 )
 
 func getEnvOrFail(key string) string {
@@ -26,12 +25,11 @@ func getEnvOrFail(key string) string {
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file")
+		log.Printf("Error loading .env file: %v", err.Error())
 	}
 
 	RPC_URL = getEnvOrFail("RPC_URL")
 	DB_NAME = getEnvOrFail("DB_NAME")
-	DB_PASSWORD = getEnvOrFail("DB_PASSWORD")
 	HOST_PORT = getEnvOrFail("HOST_PORT")
 	HOST_NAME = getEnvOrFail("HOST_NAME")
 }

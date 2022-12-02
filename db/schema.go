@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type FulfilledOrder struct {
@@ -20,18 +21,18 @@ type CancelledOrder struct {
 	Hash    [32]byte       `bun:"type:bytea,notnull"`
 	Offerer common.Address `bun:"type:bytea,notnull"`
 	Zone    common.Address `bun:"type:bytea,notnull"`
-	// Raw string `json:"raw"`
+	Raw     types.Log      `bun:"type:jsonb,notnull"`
 }
 
 type ValidatedOrder struct {
 	Hash    [32]byte       `bun:"type:bytea,notnull"`
 	Offerer common.Address `bun:"type:bytea,notnull"`
 	Zone    common.Address `bun:"type:bytea,notnull"`
-	// Raw string `json:"raw"`
+	Raw     types.Log      `bun:"type:jsonb,notnull"`
 }
 
 type CounterIncremented struct {
 	Counter *big.Int       `bun:"type:numeric,notnull"`
 	Offerer common.Address `bun:"type:bytea,notnull"`
-	// Raw    string `json:"raw"`
+	Raw     types.Log      `bun:"type:jsonb,notnull"`
 }

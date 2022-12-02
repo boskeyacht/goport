@@ -20,9 +20,6 @@ func (s *SQLWrapper) WriteCounterIncremented(event *abi.SeaportCounterIncremente
 		Offerer: event.Offerer,
 	}
 
-	s.Lock()
-	defer s.Unlock()
-
 	_, err := s.DB.NewInsert().Model(ic).Exec(context.Background(), s.DB)
 	if err != nil {
 		return err
@@ -41,9 +38,6 @@ func (s *SQLWrapper) WriteOrderFulfilled(event *abi.SeaportOrderFulfilled) error
 		Consideration: event.Consideration,
 	}
 
-	s.Lock()
-	defer s.Unlock()
-
 	_, err := s.DB.NewInsert().Model(f).Exec(context.Background(), s.DB)
 	if err != nil {
 		log.Printf("Failed to write fulfilled order to database: %v", err.Error())
@@ -60,9 +54,6 @@ func (s *SQLWrapper) WriteOrderCancelled(event *abi.SeaportOrderCancelled) error
 		Zone:    event.Zone,
 	}
 
-	s.Lock()
-	defer s.Unlock()
-
 	_, err := s.DB.NewInsert().Model(o).Exec(context.Background(), s.DB)
 	if err != nil {
 		log.Printf("Failed to write cancelled order to database: %v", err.Error())
@@ -78,9 +69,6 @@ func (s *SQLWrapper) WriteOrderValidated(event *abi.SeaportOrderValidated) error
 		Offerer: event.Offerer,
 		Zone:    event.Zone,
 	}
-
-	s.Lock()
-	defer s.Unlock()
 
 	_, err := s.DB.NewInsert().Model(v).Exec(context.Background(), s.DB)
 	if err != nil {
