@@ -11,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/libp2p/go-libp2p/core/host"
 )
 
 type SeaportListener struct {
@@ -42,7 +41,7 @@ func New() (*SeaportListener, error) {
 	}, nil
 }
 
-func (sl *SeaportListener) Start(wg *sync.WaitGroup, db *ms.SQLWrapper, lp *host.Host) {
+func (sl *SeaportListener) Start(wg *sync.WaitGroup, db *ms.SQLWrapper) {
 	sl.watchCounterIncremented(wg, db)
 	sl.watchOrderCancelled(wg, db)
 	sl.watchOrderValidated(wg, db)
@@ -68,7 +67,6 @@ func (sl *SeaportListener) watchCounterIncremented(wg *sync.WaitGroup, db *ms.SQ
 			e := <-sl.WatchCountInc
 
 			db.Lock()
-			defer db.Unlock()
 
 			err = db.WriteCounterIncremented(e)
 			if err != nil {
@@ -76,7 +74,8 @@ func (sl *SeaportListener) watchCounterIncremented(wg *sync.WaitGroup, db *ms.SQ
 				break
 			}
 
-			log.Printf("CounterIncremented: %v", e)
+			db.Unlock()
+			log.Printf("CounterIncremented: %v", e.Raw.Address.String())
 		}
 
 		wg.Done()
@@ -103,7 +102,6 @@ func (sl *SeaportListener) watchOrderCancelled(wg *sync.WaitGroup, db *ms.SQLWra
 			e := <-sl.WatchOrderCancelled
 
 			db.Lock()
-			defer db.Unlock()
 
 			err := db.WriteOrderCancelled(e)
 			if err != nil {
@@ -111,7 +109,8 @@ func (sl *SeaportListener) watchOrderCancelled(wg *sync.WaitGroup, db *ms.SQLWra
 				break
 			}
 
-			log.Printf("OrderCancelled: %v", e)
+			db.Unlock()
+			log.Printf("OrderCancelled: %v", e.Raw.Address.String())
 		}
 
 		wg.Done()
@@ -137,7 +136,6 @@ func (sl *SeaportListener) watchOrderValidated(wg *sync.WaitGroup, db *ms.SQLWra
 			e := <-sl.WatchOrderValidated
 
 			db.Lock()
-			defer db.Unlock()
 
 			err := db.WriteOrderValidated(e)
 			if err != nil {
@@ -145,7 +143,8 @@ func (sl *SeaportListener) watchOrderValidated(wg *sync.WaitGroup, db *ms.SQLWra
 				break
 			}
 
-			log.Printf("OrderValidated: %v", e)
+			db.Unlock()
+			log.Printf("OrderValidated: %v", e.Raw.Address.String())
 		}
 
 		wg.Done()
@@ -172,7 +171,6 @@ func (sl *SeaportListener) watchOrderFulfilled(wg *sync.WaitGroup, db *ms.SQLWra
 			e := <-sl.WatchOrderFulfilled
 
 			db.Lock()
-			defer db.Unlock()
 
 			err := db.WriteOrderFulfilled(e)
 			if err != nil {
@@ -180,7 +178,8 @@ func (sl *SeaportListener) watchOrderFulfilled(wg *sync.WaitGroup, db *ms.SQLWra
 				break
 			}
 
-			log.Printf("OrderFulfilled: %v", e)
+			db.Unlock()
+			log.Printf("OrderFulfilled: %v", e.Raw.Address.String())
 
 		}
 

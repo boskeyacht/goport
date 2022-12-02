@@ -61,7 +61,7 @@ func (n *Node) Start(wg *sync.WaitGroup) error {
 	}
 
 	// Start the seaport listener
-	sl.Start(wg, db, &n.Host)
+	sl.Start(wg, db)
 
 	// Create a new DHT
 	dht := kad.NewDHT(context.Background(), n.Host, nil)
