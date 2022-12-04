@@ -1,2 +1,5 @@
 *.env
 config/.env
+db/.env
+node/.env
+listener/.env

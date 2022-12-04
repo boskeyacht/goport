@@ -11,7 +11,7 @@ var (
 	RPC_URL   string
 	DB_NAME   string
 	HOST_PORT string
-	HOST_NAME string
+	HOST      string
 )
 
 func getEnvOrFail(key string) string {
@@ -31,5 +31,5 @@ func init() {
 	RPC_URL = getEnvOrFail("RPC_URL")
 	DB_NAME = getEnvOrFail("DB_NAME")
 	HOST_PORT = getEnvOrFail("HOST_PORT")
-	HOST_NAME = getEnvOrFail("HOST_NAME")
+	HOST = getEnvOrFail("HOST")
 }
