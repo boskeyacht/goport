@@ -45,7 +45,6 @@ func (n *Node) Start(wg *sync.WaitGroup) error {
 	// Open MySQL connection
 	s, err := sql.Open(sqliteshim.ShimName, fmt.Sprintf("file:%s:", config.DB_NAME))
 	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err.Error())
 		return err
 	}
 
@@ -56,7 +55,6 @@ func (n *Node) Start(wg *sync.WaitGroup) error {
 	// Create a new seaport contract listiner
 	sl, err := listener.New()
 	if err != nil {
-		log.Fatalf("Failed to create new SeaportListener: %v", err.Error())
 		return err
 	}
 
@@ -69,19 +67,16 @@ func (n *Node) Start(wg *sync.WaitGroup) error {
 	// Create a new pubsub
 	ps, err := pubsub.NewGossipSub(context.Background(), n.Host)
 	if err != nil {
-		log.Fatalf("Failed to create gossipsub: %v", err.Error())
 		return err
 	}
 
+	// Subscribe to gossipsub messages
 	mt, _ := ps.Join("gossipsub:message")
 	sub, err := mt.Subscribe(func(subscription *pubsub.Subscription) error {
-		log.Printf("Subscription Data: %v", subscription)
-
 		return nil
 	})
 
 	if err != nil {
-		log.Fatalf("Failed to subscribe to gossipsub: %v", err.Error())
 		return err
 	}
 
@@ -89,7 +84,20 @@ func (n *Node) Start(wg *sync.WaitGroup) error {
 
 	err = dht.Bootstrap(context.Background())
 	if err != nil {
-		log.Fatalf("Failed to bootstrap DHT: %v", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (n *Node) Stop() error {
+	err := n.DB.Close()
+	if err != nil {
+		return err
+	}
+
+	err = n.Host.Close()
+	if err != nil {
 		return err
 	}
 

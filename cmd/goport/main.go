@@ -17,7 +17,7 @@ func main() {
 
 	log.Println("Starting node...")
 
-	m, err := multi.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%s", config.HOST_NAME, config.HOST_PORT))
+	m, err := multi.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%s", config.HOST, config.HOST_PORT))
 	if err != nil {
 		log.Printf("Invalid multiaddr: %v", err.Error())
 		return
